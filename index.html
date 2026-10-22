@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>幕末激動インタラクティブ・アナライザー（教科書準拠版）</title>
+    <style>
+        :root {
+            --chosu-color: #ef4444;
+            --satsuma-color: #3b82f6;
+            --bakufu-color: #10b981;
+            --chotei-color: #a855f7;
+            --bg-dark: #0f172a;
+            --card-bg: #1e293b;
+            --text-light: #f8fafc;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            padding: 20px;
+            font-size: 18px;
+            line-height: 1.6;
+            max-width: 1500px;
+            margin: 0 auto;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        header h1 {
+            font-size: 2.3rem;
+            font-weight: 900;
+            color: #ffffff;
+            letter-spacing: 1px;
+        }
+
+        header p {
+            font-size: 1rem;
+            color: #94a3b8;
+            margin-top: 4px;
+        }
+
+        /* ステップナビゲーション */
+        .step-nav {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 18px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+        }
+
+        .step-btn {
+            flex: 1;
+            padding: 12px 10px;
+            border: 3px solid #475569;
+            background: #1e293b;
+            color: #cbd5e1;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.05rem;
+            text-align: center;
+            min-width: 105px;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .step-btn:hover {
+            background: #334155;
+            color: #fff;
+        }
+
+        .step-btn.active {
+            border-color: #38bdf8;
+            background: #0284c7;
+            color: #ffffff;
+            transform: scale(1.03);
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+        }
+
+        .step-btn.year-end {
+            border-right: 6px solid #f59e0b;
+        }
+
+        /* 操作ボタン */
+        .controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 24px;
+            margin-bottom: 18px;
+        }
+
+        .ctrl-btn {
+            padding: 12px 34px;
+            font-size: 1.25rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 40px;
+            cursor: pointer;
+            background: #f8fafc;
+            color: #0f172a;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+            transition: all 0.2s ease;
+        }
+
+        .ctrl-btn:hover {
+            background: #e2e8f0;
+            transform: translateY(-2px);
+        }
+
+        .step-counter {
+            font-size: 1.35rem;
+            font-weight: bold;
+            color: #38bdf8;
+        }
+
+        /* 因果関係表示カード */
+        .cause-effect-card {
+            background: #1e293b;
+            border-radius: 16px;
+            padding: 22px 30px;
+            margin-bottom: 22px;
+            border-left: 10px solid #38bdf8;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        .ce-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .ce-header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .ce-section {
+            font-size: 1rem;
+            font-weight: 800;
+            color: #cbd5e1;
+            background: #334155;
+            padding: 4px 14px;
+            border-radius: 20px;
+        }
+
+        .ce-year {
+            font-size: 1.25rem;
+            font-weight: 900;
+            color: #0f172a;
+            background: #38bdf8;
+            padding: 5px 18px;
+            border-radius: 30px;
+        }
+
+        .year-end-badge {
+            display: none;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #ffffff;
+            background: #f59e0b;
+            padding: 6px 20px;
+            border-radius: 30px;
+            animation: pulse 1.5s infinite;
+        }
+
+        .ce-title {
+            font-size: 1.75rem;
+            font-weight: 900;
+            color: #ffffff;
+            margin-bottom: 12px;
+        }
+
+        .ce-flow {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background: #0f172a;
+            padding: 16px 22px;
+            border-radius: 12px;
+            border: 1px solid #334155;
+        }
+
+        .ce-item {
+            font-size: 1.25rem;
+            line-height: 1.6;
+            font-weight: 600;
+        }
+
+        .ce-item .label {
+            font-weight: 900;
+            padding: 2px 10px;
+            border-radius: 6px;
+            margin-right: 10px;
+            display: inline-block;
+        }
+
+        .label-cause {
+            background: #ef4444;
+            color: #fff;
+        }
+
+        .label-action {
+            background: #3b82f6;
+            color: #fff;
+        }
+
+        .label-result {
+            background: #10b981;
+            color: #fff;
+        }
+
+        /* 注釈ボックス */
+        .ce-note {
+            margin-top: 12px;
+            padding: 12px 18px;
+            background: rgba(56, 189, 248, 0.12);
+            border-left: 4px solid #38bdf8;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            color: #bae6fd;
+            line-height: 1.5;
+            display: none;
+        }
+
+        .ce-note strong {
+            color: #38bdf8;
+        }
+
+        /* メインレイアウト（4大勢力グリッド） */
+        .stage-area {
+            position: relative;
+            flex-grow: 1;
+            margin-top: 8px;
+        }
+
+        .faction-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 32px;
+            min-height: 540px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .faction-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 24px 28px;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: all 0.4s ease;
+            position: relative;
+            border: 4px solid transparent;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+            opacity: 0.38;
+            filter: grayscale(35%);
+        }
+
+        .faction-card.active-step {
+            opacity: 1;
+            filter: grayscale(0%);
+            transform: scale(1.02);
+            border-color: #fbbf24;
+            box-shadow: 0 0 25px rgba(251, 191, 36, 0.4);
+            z-index: 2;
+        }
+
+        .faction-card.year-complete {
+            opacity: 1;
+            filter: grayscale(0%);
+        }
+
+        .faction-card.chosu {
+            background: linear-gradient(135deg, #1e293b 0%, #450a0a 100%);
+            border-top: 8px solid var(--chosu-color);
+        }
+
+        .faction-card.satsuma {
+            background: linear-gradient(135deg, #1e293b 0%, #172554 100%);
+            border-top: 8px solid var(--satsuma-color);
+        }
+
+        .faction-card.bakufu {
+            background: linear-gradient(135deg, #1e293b 0%, #064e3b 100%);
+            border-top: 8px solid var(--bakufu-color);
+        }
+
+        .faction-card.chotei {
+            background: linear-gradient(135deg, #1e293b 0%, #3b0764 100%);
+            border-top: 8px solid var(--chotei-color);
+        }
+
+        .faction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.15);
+            padding-bottom: 12px;
+            margin-bottom: 14px;
+        }
+
+        .faction-name {
+            font-size: 2.1rem;
+            font-weight: 900;
+            letter-spacing: 1px;
+        }
+
+        .faction-leader {
+            font-size: 1.15rem;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 5px 16px;
+            border-radius: 20px;
+            font-weight: 700;
+        }
+
+        /* 吹き出し（心の声） */
+        .speech-box {
+            background: #ffffff;
+            color: #0f172a;
+            border-radius: 14px;
+            padding: 16px 20px;
+            font-size: 1.3rem;
+            font-weight: 800;
+            line-height: 1.5;
+            position: relative;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+            margin-top: 6px;
+            margin-bottom: 12px;
+        }
+
+        .speech-box::before {
+            content: '';
+            position: absolute;
+            top: -12px;
+            left: 30px;
+            border-width: 0 12px 12px 12px;
+            border-style: solid;
+            border-color: transparent transparent #ffffff transparent;
+        }
+
+        .status-tag {
+            font-size: 1.15rem;
+            font-weight: bold;
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            align-self: flex-start;
+        }
+
+        /* オーバーレイ関係線用エリア（SVG） */
+        .relations-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 3;
+        }
+
+        /* 関係性バッジ */
+        .relation-badge {
+            position: absolute;
+            font-size: 1.15rem;
+            font-weight: 900;
+            padding: 8px 18px;
+            border-radius: 30px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+            transform: translate(-50%, -50%);
+            white-space: nowrap;
+            z-index: 10;
+            border: 3px solid;
+        }
+
+        .relation-badge.vs {
+            background: #450a0a;
+            color: #fca5a5;
+            border-color: #ef4444;
+        }
+
+        .relation-badge.ally {
+            background: #172554;
+            color: #93c5fd;
+            border-color: #3b82f6;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        @media (max-width: 950px) {
+            .faction-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .faction-name {
+                font-size: 1.8rem;
+            }
+
+            .speech-box {
+                font-size: 1.15rem;
+            }
+
+            .ce-title {
+                font-size: 1.4rem;
+            }
+
+            .ce-item {
+                font-size: 1.1rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>幕末の因果関係＆勢力変化マップ</h1>
+        <p>教科書記述に忠実な12ステップ・因果構造アナライザー</p>
+    </header>
+
+    <!-- 順序ステップボタン -->
+    <div class="step-nav" id="stepNav"></div>
+
+    <!-- コントローラー -->
+    <div class="controls">
+        <button class="ctrl-btn" onclick="prevStep()">◀ 前の出来事</button>
+        <span class="step-counter" id="stepCounter">Step 1 / 12</span>
+        <button class="ctrl-btn" onclick="nextStep()">次の出来事 ▶</button>
+    </div>
+
+    <!-- 因果関係カード -->
+    <div class="cause-effect-card">
+        <div class="ce-header">
+            <div class="ce-header-left">
+                <span class="ce-section" id="ceSection">［薩摩藩と長州藩の動き］</span>
+                <span class="ce-year" id="ceYear">1863年</span>
+            </div>
+            <span class="year-end-badge" id="yearEndBadge">✨ 1863年の4勢力が出そろいました！</span>
+        </div>
+        <div class="ce-title" id="ceTitle">出来事タイトル</div>
+        <div class="ce-flow">
+            <div class="ce-item"><span class="label label-cause">原因</span><span id="textCause">―</span></div>
+            <div class="ce-item"><span class="label label-action">出来事</span><span id="textAction">―</span></div>
+            <div class="ce-item"><span class="label label-result">結果・影響</span><span id="textResult">―</span></div>
+        </div>
+        <div class="ce-note" id="ceNote"></div>
+    </div>
+
+    <!-- 4大勢力ステージ -->
+    <div class="stage-area">
+        <!-- 勢力間関係線描画用SVG -->
+        <svg class="relations-overlay" id="relationsSvg"></svg>
+
+        <!-- 関係ラベル設置用コンテナ -->
+        <div id="badgesContainer"></div>
+
+        <div class="faction-grid">
+            <!-- 長州藩 -->
+            <div class="faction-card chosu" id="cardChosu">
+                <div class="faction-header">
+                    <span class="faction-name">🔴 長州藩（山口県）</span>
+                    <span class="faction-leader">高杉晋作・木戸孝允</span>
+                </div>
+                <div class="speech-box" id="speechChosu">―</div>
+                <span class="status-tag" id="statusChosu">待機中</span>
+            </div>
+
+            <!-- 薩摩藩 -->
+            <div class="faction-card satsuma" id="cardSatsuma">
+                <div class="faction-header">
+                    <span class="faction-name">🔵 薩摩藩（鹿児島県）</span>
+                    <span class="faction-leader">西郷隆盛・大久保利通</span>
+                </div>
+                <div class="speech-box" id="speechSatsuma">―</div>
+                <span class="status-tag" id="statusSatsuma">待機中</span>
+            </div>
+
+            <!-- 幕府 -->
+            <div class="faction-card bakufu" id="cardBakufu">
+                <div class="faction-header">
+                    <span class="faction-name">🟢 幕府（江戸）</span>
+                    <span class="faction-leader">徳川慶喜</span>
+                </div>
+                <div class="speech-box" id="speechBakufu">―</div>
+                <span class="status-tag" id="statusBakufu">待機中</span>
+            </div>
+
+            <!-- 朝廷 -->
+            <div class="faction-card chotei" id="cardChotei">
+                <div class="faction-header">
+                    <span class="faction-name">🟣 朝廷（京都）</span>
+                    <span class="faction-leader">天皇・岩倉具視</span>
+                </div>
+                <div class="speech-box" id="speechChotei">―</div>
+                <span class="status-tag" id="statusChotei">待機中</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 教科書本文・注釈に100%忠実な12ステップデータ
+        const steps = [
+            // --- ［薩摩藩と長州藩の動き］ ---
+            {
+                year: "1863年",
+                subStep: "1863年 (1/2)",
+                section: "［薩摩藩と長州藩の動き］",
+                title: "① 長州藩による攘夷の実行と外国船砲撃",
+                cause: "尊王攘夷運動の中心だった長州藩（山口県）が朝廷を動かした。",
+                action: "幕府に攘夷の実行を約束させ、率先して関門海峡を通る外国船を砲撃した！",
+                result: "長州藩が率先して攘夷を実行に移した。",
+                note: "",
+                activeFactions: ["chosu", "bakufu", "chotei"],
+                relations: [
+                    { from: "chosu", to: "chotei", type: "ally", label: "朝廷を動かす" },
+                    { from: "chosu", to: "bakufu", type: "vs", label: "攘夷を実行させる" }
+                ],
+                isYearEnd: false,
+                factions: {
+                    chosu: { speech: "「朝廷を動かし、幕府に攘夷の実行を約束させたぞ！率先して関門海峡を通る外国船を砲撃だ！」", status: "⚡ 率先して砲撃" },
+                    bakufu: { speech: "「長州藩に動かされた朝廷により、攘夷の実行を約束させられてしまった…」", status: "⚡ 攘夷を約束させられる" },
+                    chotei: { speech: "「長州藩に動かされ、幕府に攘夷の実行を約束させた。」", status: "⚡ 幕府に攘夷命令" },
+                    satsuma: { speech: "「長州藩の過激な動きを警戒している…」", status: "警戒中" }
+                }
+            },
+            {
+                year: "1863年",
+                subStep: "1863年 (2/2)",
+                section: "［薩摩藩と長州藩の動き］",
+                title: "② 薩摩藩・会津藩による長州藩の京都追放",
+                cause: "長州藩のこうした動きに対し。",
+                action: "薩摩藩（鹿児島県）や会津藩（福島県）は、過激な主張をする公家や長州藩士を京都から追放した！",
+                result: "長州藩と過激派公家は京都から追放された。",
+                note: "❶ 会津藩は親藩で、このときの藩主は、京都を守る幕府の役職に就いていました。",
+                activeFactions: ["satsuma", "chosu", "chotei"],
+                relations: [
+                    { from: "satsuma", to: "chosu", type: "vs", label: "⚔️ 会津藩とともに京都から追放" }
+                ],
+                isYearEnd: true,
+                factions: {
+                    satsuma: { speech: "「会津藩とともに、過激な主張をする公家や長州藩士を京都から追放した！」", status: "⚡ 会津藩と協力し追放" },
+                    chosu: { speech: "「薩摩藩や会津藩によって、過激な長州藩士が京都から追放されてしまった…」", status: "⚡ 京都から追放" },
+                    chotei: { speech: "「過激な主張をする公家が京都から追放された。」", status: "⚡ 公家が追放される" },
+                    bakufu: { speech: "「親藩である会津藩主が、京都を守る役職として長州勢を追放した。」", status: "1863年の状況確定" }
+                }
+            },
+
+            // --- 1864年 ---
+            {
+                year: "1864年",
+                subStep: "1864年 (1/3)",
+                section: "［薩摩藩と長州藩の動き］",
+                title: "③ 長州藩の京都進軍と敗北",
+                cause: "長州藩が勢力の回復を目指した。",
+                action: "軍隊を率いて京都に入ったが、会津藩や薩摩藩などと戦って敗れた！",
+                result: "長州藩は京都での勢力回復に失敗した。",
+                note: "",
+                activeFactions: ["chosu", "satsuma"],
+                relations: [
+                    { from: "chosu", to: "satsuma", type: "vs", label: "⚔️ 京都で戦い敗れる" }
+                ],
+                isYearEnd: false,
+                factions: {
+                    chosu: { speech: "「勢力回復を目指し軍隊を率いて京都に入ったが、会津藩や薩摩藩などと戦って敗れた…」", status: "⚡ 京都で戦い敗北" },
+                    satsuma: { speech: "「京都に入ってきた長州藩と戦い、これを破った！」", status: "⚡ 長州藩と戦い勝利" },
+                    bakufu: { speech: "「長州藩の進軍に対し、出兵命令の準備を進める。」", status: "準備中" },
+                    chotei: { speech: "「京都で戦いが起きたが、長州藩は敗れ去った。」", status: "静観中" }
+                }
+            },
+            {
+                year: "1864年",
+                subStep: "1864年 (2/3)",
+                section: "［薩摩藩と長州藩の動き］",
+                title: "④ 幕府の出兵 と 下関戦争",
+                cause: "長州藩の京都進軍および外国船砲撃に対する報復として。",
+                action: "幕府は諸藩に命じて出兵し長州藩を従わせた。同じころ、英・仏・米・蘭の連合海軍が下関砲台を攻撃した（下関戦争）！",
+                result: "長州藩は幕府に従わされ、連合国からも攻撃を受けた。",
+                note: "",
+                activeFactions: ["bakufu", "chosu", "satsuma"],
+                relations: [
+                    { from: "bakufu", to: "chosu", type: "vs", label: "⚔️ 諸藩に命じ出兵・従わせる" }
+                ],
+                isYearEnd: false,
+                factions: {
+                    bakufu: { speech: "「諸藩に命じて出兵し、長州藩を従わせたぞ！」", status: "⚡ 長州藩を従わせる" },
+                    chosu: { speech: "「幕府に従わされ、同じころ英・仏・米・蘭の連合海軍に下関砲台を攻撃された（下関戦争）…」", status: "⚡ 幕府に従う ＆ 下関戦争" },
+                    satsuma: { speech: "「幕府の命で出兵に参加し、長州藩が従うのを見届けた。」", status: "出兵に参加" },
+                    chotei: { speech: "「幕府の出兵により長州藩が従わされた。」", status: "静観中" }
+                }
+            },
+            {
+                year: "1864年",
+                subStep: "1864年 (3/3)",
+                section: "［薩摩藩と長州藩の動き］",
+                title: "⑤ 薩英戦争・下関戦争の悟りと軍備強化",
+                cause: "薩摩藩も1863年、前年の生麦事件の報復としてイギリス海軍に鹿児島を攻撃されていた（薩英戦争）。",
+                action: "薩摩藩と長州藩は、これらの戦いを通じて「攘夷が困難であること」をさとった！",
+                result: "長州藩では高杉晋作や木戸孝允が、薩摩藩では西郷隆盛や大久保利通が実権をにぎり、西洋式の軍備を強化した。",
+                note: "❷ 薩摩藩士が生麦村（神奈川県）で、藩主の父の行列に入りこんだイギリス商人を殺傷しました（生麦事件）。",
+                activeFactions: ["chosu", "satsuma", "bakufu", "chotei"],
+                relations: [],
+                isYearEnd: true,
+                factions: {
+                    chosu: { speech: "「下関戦争を経て、攘夷が困難であることをさとった！高杉晋作や木戸孝允が実権をにぎり、西洋式の軍備を強化する！」", status: "⚡ 攘夷困難を悟る ➔ 軍備強化" },
+                    satsuma: { speech: "「生麦事件の報復で鹿児島を攻撃された（薩英戦争）。戦いを通じて攘夷が困難だとさとった！西郷隆盛や大久保利通が実権をにぎり、西洋式の軍備を強化する！」", status: "⚡ 攘夷困難を悟る ➔ 軍備強化" },
+                    bakufu: { speech: "「長州や薩摩が西洋式の軍備強化を進めているのを警戒している。」", status: "1864年の状況確定" },
+                    chotei: { speech: "「両藩が西洋式の軍備強化へと舵を切った。」", status: "1864年の状況確定" }
+                }
+            },
+
+            // --- 1866年 ---
+            {
+                year: "1866年",
+                subStep: "1866年 (1/2)",
+                section: "［薩摩藩と長州藩の動き］",
+                title: "⑥ 薩長同盟の結成",
+                cause: "土佐藩（高知県）出身の坂本龍馬などの仲介により。",
+                action: "薩摩藩と長州藩は「薩長同盟」を結び、幕府と対決する姿勢を強めた！",
+                result: "倒幕へ向けて薩摩藩と長州藩が固く手を結んだ。",
+                note: "",
+                activeFactions: ["satsuma", "chosu"],
+                relations: [
+                    { from: "satsuma", to: "chosu", type: "ally", label: "🤝 薩長同盟（坂本龍馬らの仲介）" }
+                ],
+                isYearEnd: false,
+                factions: {
+                    satsuma: { speech: "「土佐藩出身の坂本龍馬などの仲介で、長州藩と薩長同盟を結んだ！幕府と対決する姿勢を強めるぞ！」", status: "⚡ 薩長同盟を結ぶ" },
+                    chosu: { speech: "「坂本龍馬などの仲介で、薩摩藩と薩長同盟を結んだ！幕府と対決する姿勢を強める！」", status: "⚡ 薩長同盟を結ぶ" },
+                    bakufu: { speech: "「長州藩へ再び出兵する準備を進めている…（密約を知らず）」", status: "知らずに出兵準備" },
+                    chotei: { speech: "「幕府と両藩の動向を静観している。」", status: "静観中" }
+                }
+            },
+            {
+                year: "1866年",
+                subStep: "1866年 (2/2)",
+                section: "［薩摩藩と長州藩の動き］",
+                title: "⑦ 幕府の再出兵と失敗",
+                cause: "幕府が同年、再び長州藩に出兵した。",
+                action: "薩摩藩が出兵に反対したため、幕府の出兵は失敗に終わった！",
+                result: "幕府の権威は大きく失墜した。",
+                note: "",
+                activeFactions: ["bakufu", "satsuma", "chosu", "chotei"],
+                relations: [
+                    { from: "bakufu", to: "chosu", type: "vs", label: "⚔️ 再び出兵（失敗）" },
+                    { from: "satsuma", to: "bakufu", type: "vs", label: "⛔ 出兵に反対" }
+                ],
+                isYearEnd: true,
+                factions: {
+                    bakufu: { speech: "「再び長州藩に出兵したが、薩摩藩の反対で失敗に終わってしまった…」", status: "⚡ 再出兵が失敗" },
+                    satsuma: { speech: "「幕府が再び長州藩に出兵するのに反対し、失敗に終わらせたぞ。」", status: "⚡ 幕府の出兵に反対" },
+                    chosu: { speech: "「薩摩藩の反対もあり、幕府の再出兵をしりぞけた！」", status: "⚡ 幕府の出兵を失敗させる" },
+                    chotei: { speech: "「幕府の長州出兵が失敗に終わった。」", status: "1866年の状況確定" }
+                }
+            },
+
+            // --- ［世直しへの期待］ ---
+            {
+                year: "1866年〜",
+                subStep: "世直し",
+                section: "［世直しへの期待］",
+                title: "⑧ 世直しへの期待（社会不安と民衆の動き）",
+                cause: "開国や長州藩への出兵などの影響で、物価が上昇して民衆の生活は苦しくなり、社会不安も広がった。",
+                action: "民衆は「世直し」を期待して大規模な一揆や打ちこわしを起こし、借金の帳消しや手放した農地の返還などを求めた！また「ええじゃないか」と唱え熱狂しておどる現象も各地で発生した。",
+                result: "民衆の激しい行動が、幕府の支配基盤を足元から揺るがした。",
+                note: "開国による生糸輸出急増などで物価が高騰。各地で一揆・打ちこわしが激増し、民衆の間で「ええじゃないか」の乱舞が流行しました。",
+                activeFactions: ["bakufu", "chotei", "satsuma", "chosu"],
+                relations: [],
+                isYearEnd: false,
+                factions: {
+                    bakufu: { speech: "「物価上昇で民衆の生活が苦しくなり、大規模な一揆や打ちこわし、「ええじゃないか」が各地で発生して世情が不穏を極めている…！」", status: "⚡ 一揆・打ちこわし激増" },
+                    chotei: { speech: "「民衆の間で『世直し』を求める動きが急速に広がっている。」", status: "社会不安を注視" },
+                    satsuma: { speech: "「幕府の支配は足元から揺らいでいる。倒幕への機は熟しつつあるぞ！」", status: "情勢を見極める" },
+                    chosu: { speech: "「民衆の不満も最高潮だ。幕府打倒へ向けて突き進むのみ！」", status: "倒幕の機運高まる" }
+                }
+            },
+
+            // --- ［大政奉還と王政復古］ ---
+            {
+                year: "1867年",
+                subStep: "1867年 (1/2)",
+                section: "［大政奉還と王政復古］",
+                title: "⑨ 大政奉還と慶喜の狙い",
+                cause: "こうした中で第15代将軍となった徳川慶喜に対し、土佐藩がすすめた。",
+                action: "徳川慶喜は、土佐藩のすすめで政権を朝廷に返した（大政奉還）！",
+                result: "260年余り続いた幕府は滅びたが、慶喜は新政権でも主導権をにぎろうと考えた。",
+                note: "",
+                activeFactions: ["bakufu", "chotei"],
+                relations: [
+                    { from: "bakufu", to: "chotei", type: "ally", label: "📜 政権を返す（大政奉還）" }
+                ],
+                isYearEnd: false,
+                factions: {
+                    bakufu: { speech: "「土佐藩のすすめで政権を朝廷に返す（大政奉還）。260年余り続いた幕府は滅びたが、新政権でも主導権をにぎるぞ！」", status: "⚡ 大政奉還（主導権を狙う）" },
+                    chotei: { speech: "「徳川慶喜から政権が返された（大政奉還）。260年余り続いた幕府は滅びた！」", status: "⚡ 政権を受け取る" },
+                    satsuma: { speech: "「慶喜に新政権の主導権を渡すわけにはいかない！」", status: "主導権阻止へ動く" },
+                    chosu: { speech: "「薩摩藩とともに新政府の樹立を目指す！」", status: "待機中" }
+                }
+            },
+            {
+                year: "1867年",
+                subStep: "1867年 (2/2)",
+                section: "［大政奉還と王政復古］",
+                title: "⑩ 王政復古の大号令",
+                cause: "慶喜が新政権でも主導権をにぎろうと考えたのに対し。",
+                action: "朝廷では西郷や公家の岩倉具視などが中心となって「王政復古の大号令」を出し、天皇を中心とする政府の樹立を宣言した！",
+                result: "慶喜に官職や領地の返上を命じた。",
+                note: "",
+                activeFactions: ["chotei", "satsuma", "bakufu", "chosu"],
+                relations: [
+                    { from: "chotei", to: "bakufu", type: "vs", label: "⛔ 官職・領地の返上を命令" }
+                ],
+                isYearEnd: true,
+                factions: {
+                    chotei: { speech: "「西郷や公家の岩倉具視などが中心となって王政復古の大号令を出し、天皇を中心とする政府の樹立を宣言した！」", status: "⚡ 王政復古の大号令" },
+                    satsuma: { speech: "「岩倉具視らと中心になり、慶喜に官職や領地の返上を命じたぞ！」", status: "⚡ 朝廷で主導権を握る" },
+                    bakufu: { speech: "「朝廷から官職や領地の返上を命じられた…納得がいかん！」", status: "⚡ 官職・領地の返上命令" },
+                    chosu: { speech: "「天皇を中心とする新政府の宣言を全面的に支持する！」", status: "1867年の状況確定" }
+                }
+            },
+
+            // --- 1868年〜 ---
+            {
+                year: "1868年",
+                subStep: "1868年",
+                section: "［大政奉還と王政復古］",
+                title: "⑪ 鳥羽・伏見の戦い",
+                cause: "官職や領地の返上命令に不満を持つ旧幕府軍。",
+                action: "1868年、これに不満を持つ旧幕府軍と新政府軍との間で、鳥羽・伏見の戦い（京都市）が起こった！",
+                result: "新政府軍が勝利を収めた。",
+                note: "",
+                activeFactions: ["bakufu", "satsuma", "chosu"],
+                relations: [
+                    { from: "bakufu", to: "satsuma", type: "vs", label: "⚔️ 鳥羽・伏見の戦い" },
+                    { from: "bakufu", to: "chosu", type: "vs", label: "⚔️ 鳥羽・伏見の戦い" }
+                ],
+                isYearEnd: false,
+                factions: {
+                    bakufu: { speech: "「官職や領地の返上命令に不満を持つ旧幕府軍として、新政府軍と鳥羽・伏見の戦いを起こす！」", status: "⚡ 旧幕府軍として開戦" },
+                    satsuma: { speech: "「新政府軍として、これに不満を持つ旧幕府軍と鳥羽・伏見で戦い勝利した！」", status: "⚡ 新政府軍として勝利" },
+                    chosu: { speech: "「新政府軍として旧幕府軍と戦い、鳥羽・伏見の戦いに勝利した！」", status: "⚡ 新政府軍として勝利" },
+                    chotei: { speech: "「天皇を中心とする政府として戦いの行方を見守る。」", status: "静観中" }
+                }
+            },
+            {
+                year: "1868年〜1869年",
+                subStep: "1868-69年",
+                section: "［大政奉還と王政復古］",
+                title: "⑫ 戊辰戦争の終結と国内平定",
+                cause: "鳥羽・伏見の戦いに勝利した新政府。",
+                action: "江戸城を明けわたさせ、翌年に函館（北海道）で最後まで抵抗する旧幕府軍を降伏させた（戊辰戦争）！",
+                result: "新政府が国内を平定した。",
+                note: "",
+                activeFactions: ["satsuma", "chosu", "bakufu", "chotei"],
+                relations: [
+                    { from: "satsuma", to: "bakufu", type: "vs", label: "⚔️ 函館で降伏させる（戊辰戦争）" },
+                    { from: "chosu", to: "bakufu", type: "vs", label: "⚔️ 函館で降伏させる（戊辰戦争）" }
+                ],
+                isYearEnd: true,
+                factions: {
+                    satsuma: { speech: "「江戸城を明けわたさせ、翌年に函館で最後まで抵抗する旧幕府軍を降伏させ、国内を平定した（戊辰戦争）！」", status: "🏆 国内を平定" },
+                    chosu: { speech: "「江戸城を明けわたさせ、翌年に函館で最後まで抵抗する旧幕府軍を降伏させ、国内を平定した（戊辰戦争）！」", status: "🏆 国内を平定" },
+                    bakufu: { speech: "「新政府に江戸城を明けわたした。翌年には函館で最後まで抵抗した旧幕府軍も降伏した…」", status: "💀 降伏（戊辰戦争終結）" },
+                    chotei: { speech: "「天皇を中心とする新政府が樹立され、国内が平定された。」", status: "🏛️ 国内平定" }
+                }
+            }
+        ];
+
+        let currentStepIndex = 0;
+
+        function init() {
+            const nav = document.getElementById('stepNav');
+            nav.innerHTML = '';
+
+            steps.forEach((s, idx) => {
+                const btn = document.createElement('button');
+                btn.className = `step-btn ${idx === 0 ? 'active' : ''} ${s.isYearEnd ? 'year-end' : ''}`;
+                btn.onclick = () => renderStep(idx);
+                btn.innerText = s.subStep;
+                nav.appendChild(btn);
+            });
+
+            renderStep(0);
+            window.addEventListener('resize', drawLines);
+        }
+
+        function renderStep(index) {
+            currentStepIndex = index;
+            const data = steps[index];
+
+            // ボタンのアクティブ状態
+            const btns = document.querySelectorAll('.step-btn');
+            btns.forEach((btn, i) => {
+                if (i === index) btn.classList.add('active');
+                else btn.classList.remove('active');
+            });
+
+            // ステップカウンター
+            document.getElementById('stepCounter').innerText = `Step ${index + 1} / ${steps.length}`;
+
+            // 因果関係カードの更新
+            document.getElementById('ceSection').innerText = data.section;
+            document.getElementById('ceYear').innerText = data.year;
+            document.getElementById('ceTitle').innerText = data.title;
+            document.getElementById('textCause').innerText = data.cause;
+            document.getElementById('textAction').innerText = data.action;
+            document.getElementById('textResult').innerText = data.result;
+
+            // 注釈ボックスの更新
+            const noteEl = document.getElementById('ceNote');
+            if (data.note) {
+                noteEl.innerHTML = `<strong>【教科書注記】</strong> ${data.note}`;
+                noteEl.style.display = 'block';
+            } else {
+                noteEl.style.display = 'none';
+            }
+
+            // 年末バッジ
+            const badge = document.getElementById('yearEndBadge');
+            if (data.isYearEnd) {
+                badge.innerText = `✨ ${data.year} の4勢力が出そろいました！`;
+                badge.style.display = 'inline-block';
+            } else {
+                badge.style.display = 'none';
+            }
+
+            // 4大勢力カードの更新
+            const factionKeys = ['chosu', 'satsuma', 'bakufu', 'chotei'];
+
+            factionKeys.forEach(key => {
+                const card = document.getElementById(`card${capitalize(key)}`);
+                const speech = document.getElementById(`speech${capitalize(key)}`);
+                const status = document.getElementById(`status${capitalize(key)}`);
+                const fData = data.factions[key];
+
+                speech.innerText = fData.speech;
+                status.innerText = fData.status;
+
+                card.classList.remove('active-step', 'year-complete');
+
+                if (data.activeFactions.includes(key)) {
+                    card.classList.add('active-step');
+                }
+
+                if (data.isYearEnd) {
+                    card.classList.add('year-complete');
+                }
+            });
+
+            // 関係線の描画
+            setTimeout(drawLines, 50);
+        }
+
+        function drawLines() {
+            const svg = document.getElementById('relationsSvg');
+            const badgesContainer = document.getElementById('badgesContainer');
+            svg.innerHTML = '';
+            badgesContainer.innerHTML = '';
+
+            const data = steps[currentStepIndex];
+            if (!data.relations || data.relations.length === 0) return;
+
+            const stageRect = document.querySelector('.stage-area').getBoundingClientRect();
+
+            data.relations.forEach(rel => {
+                const fromCard = document.getElementById(`card${capitalize(rel.from)}`);
+                const toCard = document.getElementById(`card${capitalize(rel.to)}`);
+
+                if (!fromCard || !toCard) return;
+
+                const rectA = fromCard.getBoundingClientRect();
+                const rectB = toCard.getBoundingClientRect();
+
+                const x1 = rectA.left + rectA.width / 2 - stageRect.left;
+                const y1 = rectA.top + rectA.height / 2 - stageRect.top;
+                const x2 = rectB.left + rectB.width / 2 - stageRect.left;
+                const y2 = rectB.top + rectB.height / 2 - stageRect.top;
+
+                // SVGラインの生成
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', x1);
+                line.setAttribute('y1', y1);
+                line.setAttribute('x2', x2);
+                line.setAttribute('y2', y2);
+                line.setAttribute('stroke', rel.type === 'vs' ? '#ef4444' : '#3b82f6');
+                line.setAttribute('stroke-width', '6');
+                line.setAttribute('stroke-dasharray', rel.type === 'vs' ? '8 6' : 'none');
+                svg.appendChild(line);
+
+                // 重なり防止不透明関係ラベルバッジの生成
+                const midX = (x1 + x2) / 2;
+                const midY = (y1 + y2) / 2;
+
+                const badge = document.createElement('div');
+                badge.className = `relation-badge ${rel.type}`;
+                badge.style.left = `${midX}px`;
+                badge.style.top = `${midY}px`;
+                badge.innerText = rel.label;
+
+                badgesContainer.appendChild(badge);
+            });
+        }
+
+        function capitalize(str) {
+            return str.charAt(0).toUpperCase() + str.slice(1);
+        }
+
+        function nextStep() {
+            if (currentStepIndex < steps.length - 1) {
+                renderStep(currentStepIndex + 1);
+            } else {
+                renderStep(0);
+            }
+        }
+
+        function prevStep() {
+            if (currentStepIndex > 0) {
+                renderStep(currentStepIndex - 1);
+            }
+        }
+
+        // キーボード操作対応（左右矢印キーでステップ移動）
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') nextStep();
+            if (e.key === 'ArrowLeft') prevStep();
+        });
+
+        window.onload = init;
+    </script>
+</body>
+
+</html>
