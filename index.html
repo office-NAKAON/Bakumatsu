@@ -336,6 +336,139 @@
             font-weight: 700;
         }
 
+        /* 人名リンク */
+        .person-link {
+            color: #38bdf8;
+            text-decoration: underline;
+            text-decoration-thickness: 2px;
+            text-underline-offset: 4px;
+            cursor: pointer;
+            font-weight: 800;
+            transition: all 0.2s ease;
+            border-radius: 6px;
+            padding: 1px 4px;
+        }
+
+        .person-link:hover {
+            color: #ffffff;
+            background: rgba(56, 189, 248, 0.25);
+        }
+
+        .faction-leader .person-link {
+            color: #fde047;
+        }
+
+        .faction-leader .person-link:hover {
+            color: #ffffff;
+            background: rgba(253, 224, 71, 0.25);
+        }
+
+        .speech-box .person-link {
+            color: #0284c7;
+        }
+
+        .speech-box .person-link:hover {
+            color: #0369a1;
+            background: rgba(2, 132, 199, 0.12);
+        }
+
+        /* 人物イラスト表示モーダル */
+        .person-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.82);
+            backdrop-filter: blur(4px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .person-modal-overlay.open {
+            display: flex;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .person-modal {
+            background: #1e293b;
+            border: 3px solid #38bdf8;
+            border-radius: 24px;
+            padding: 28px 32px;
+            max-width: 440px;
+            width: 100%;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+        }
+
+        .person-modal-close {
+            position: absolute;
+            top: 14px;
+            right: 16px;
+            background: #334155;
+            color: #f8fafc;
+            border: none;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            font-size: 1.4rem;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+            transition: background 0.2s ease;
+        }
+
+        .person-modal-close:hover {
+            background: #ef4444;
+        }
+
+        .person-modal-faction {
+            display: inline-block;
+            font-size: 0.95rem;
+            font-weight: 800;
+            padding: 4px 14px;
+            border-radius: 20px;
+            background: #334155;
+            color: #e2e8f0;
+            margin-bottom: 8px;
+        }
+
+        .person-modal-name {
+            font-size: 1.9rem;
+            font-weight: 900;
+            color: #ffffff;
+            margin-bottom: 16px;
+        }
+
+        .person-modal-img-wrap {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 260px;
+        }
+
+        .person-modal-img-wrap img {
+            max-width: 100%;
+            max-height: 300px;
+            object-fit: contain;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
         /* 吹き出し（心の声） */
         .speech-box {
             background: #ffffff;
@@ -494,7 +627,7 @@
             <div class="faction-card chosu" id="cardChosu">
                 <div class="faction-header">
                     <span class="faction-name">🔴 長州藩（山口県）</span>
-                    <span class="faction-leader">高杉晋作・木戸孝允</span>
+                    <span class="faction-leader"><a href="takasugi_shinsaku.png" class="person-link" onclick="openPersonModal(event, 'takasugi')">高杉晋作</a>・<a href="kido_takayoshi_katsura_kogorou.png" class="person-link" onclick="openPersonModal(event, 'kido')">木戸孝允</a></span>
                 </div>
                 <div class="speech-box" id="speechChosu">―</div>
                 <span class="status-tag" id="statusChosu">待機中</span>
@@ -504,7 +637,7 @@
             <div class="faction-card satsuma" id="cardSatsuma">
                 <div class="faction-header">
                     <span class="faction-name">🔵 薩摩藩（鹿児島県）</span>
-                    <span class="faction-leader">西郷隆盛・大久保利通</span>
+                    <span class="faction-leader"><a href="nigaoe_saigoutakamori.png" class="person-link" onclick="openPersonModal(event, 'saigo')">西郷隆盛</a>・<a href="okubo_toshimichi.png" class="person-link" onclick="openPersonModal(event, 'okubo')">大久保利通</a></span>
                 </div>
                 <div class="speech-box" id="speechSatsuma">―</div>
                 <span class="status-tag" id="statusSatsuma">待機中</span>
@@ -514,7 +647,7 @@
             <div class="faction-card bakufu" id="cardBakufu">
                 <div class="faction-header">
                     <span class="faction-name">🟢 幕府（江戸）</span>
-                    <span class="faction-leader">徳川慶喜</span>
+                    <span class="faction-leader"><a href="nigaoe_tokugawa_yoshinobu.png" class="person-link" onclick="openPersonModal(event, 'yoshinobu')">徳川慶喜</a></span>
                 </div>
                 <div class="speech-box" id="speechBakufu">―</div>
                 <span class="status-tag" id="statusBakufu">待機中</span>
@@ -524,10 +657,22 @@
             <div class="faction-card chotei" id="cardChotei">
                 <div class="faction-header">
                     <span class="faction-name">🟣 朝廷（京都）</span>
-                    <span class="faction-leader">天皇・岩倉具視</span>
+                    <span class="faction-leader">天皇・<a href="nigaoe_iwakura_tomomi.png" class="person-link" onclick="openPersonModal(event, 'iwakura')">岩倉具視</a></span>
                 </div>
                 <div class="speech-box" id="speechChotei">―</div>
                 <span class="status-tag" id="statusChotei">待機中</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 人物イラスト表示モーダル -->
+    <div class="person-modal-overlay" id="personModalOverlay" onclick="closePersonModal(event)">
+        <div class="person-modal" onclick="event.stopPropagation()">
+            <button class="person-modal-close" onclick="closePersonModal()" aria-label="閉じる">×</button>
+            <div class="person-modal-faction" id="personModalFaction"></div>
+            <div class="person-modal-name" id="personModalName"></div>
+            <div class="person-modal-img-wrap">
+                <img id="personModalImg" src="" alt="">
             </div>
         </div>
     </div>
@@ -800,6 +945,78 @@
             }
         ];
 
+        // 人物データ（イラスト画像との紐付け）
+        const persons = {
+            takasugi: {
+                name: "高杉 晋作",
+                faction: "🔴 長州藩（山口県）",
+                img: "takasugi_shinsaku.png"
+            },
+            kido: {
+                name: "木戸 孝允（桂 小五郎）",
+                faction: "🔴 長州藩（山口県）",
+                img: "kido_takayoshi_katsura_kogorou.png"
+            },
+            saigo: {
+                name: "西郷 隆盛",
+                faction: "🔵 薩摩藩（鹿児島県）",
+                img: "nigaoe_saigoutakamori.png"
+            },
+            okubo: {
+                name: "大久保 利通",
+                faction: "🔵 薩摩藩（鹿児島県）",
+                img: "okubo_toshimichi.png"
+            },
+            yoshinobu: {
+                name: "徳川 慶喜",
+                faction: "🟢 幕府（江戸）",
+                img: "nigaoe_tokugawa_yoshinobu.png"
+            },
+            iwakura: {
+                name: "岩倉 具視",
+                faction: "🟣 朝廷（京都）",
+                img: "nigaoe_iwakura_tomomi.png"
+            }
+        };
+
+        const nameToKey = {
+            "高杉晋作": "takasugi",
+            "木戸孝允": "kido",
+            "西郷隆盛": "saigo",
+            "西郷": "saigo",
+            "大久保利通": "okubo",
+            "徳川慶喜": "yoshinobu",
+            "慶喜": "yoshinobu",
+            "岩倉具視": "iwakura"
+        };
+
+        function linkifyNames(text) {
+            if (!text) return "";
+            return text.replace(/高杉晋作|木戸孝允|西郷隆盛|西郷|大久保利通|徳川慶喜|慶喜|岩倉具視/g, (match) => {
+                const key = nameToKey[match];
+                const p = persons[key];
+                return `<a href="${p.img}" class="person-link" onclick="openPersonModal(event, '${key}')">${match}</a>`;
+            });
+        }
+
+        function openPersonModal(event, key) {
+            if (event) event.preventDefault();
+            const p = persons[key];
+            if (!p) return;
+
+            document.getElementById('personModalFaction').innerText = p.faction;
+            document.getElementById('personModalName').innerText = p.name;
+            const imgEl = document.getElementById('personModalImg');
+            imgEl.src = p.img;
+            imgEl.alt = p.name;
+
+            document.getElementById('personModalOverlay').classList.add('open');
+        }
+
+        function closePersonModal(event) {
+            document.getElementById('personModalOverlay').classList.remove('open');
+        }
+
         let currentStepIndex = 0;
 
         function init() {
@@ -835,15 +1052,15 @@
             // 因果関係カードの更新
             document.getElementById('ceSection').innerText = data.section;
             document.getElementById('ceYear').innerText = data.year;
-            document.getElementById('ceTitle').innerText = data.title;
-            document.getElementById('textCause').innerText = data.cause;
-            document.getElementById('textAction').innerText = data.action;
-            document.getElementById('textResult').innerText = data.result;
+            document.getElementById('ceTitle').innerHTML = linkifyNames(data.title);
+            document.getElementById('textCause').innerHTML = linkifyNames(data.cause);
+            document.getElementById('textAction').innerHTML = linkifyNames(data.action);
+            document.getElementById('textResult').innerHTML = linkifyNames(data.result);
 
             // 注釈ボックスの更新
             const noteEl = document.getElementById('ceNote');
             if (data.note) {
-                noteEl.innerHTML = `<strong>【教科書注記】</strong> ${data.note}`;
+                noteEl.innerHTML = `<strong>【教科書注記】</strong> ${linkifyNames(data.note)}`;
                 noteEl.style.display = 'block';
             } else {
                 noteEl.style.display = 'none';
@@ -867,7 +1084,7 @@
                 const status = document.getElementById(`status${capitalize(key)}`);
                 const fData = data.factions[key];
 
-                speech.innerText = fData.speech;
+                speech.innerHTML = linkifyNames(fData.speech);
                 status.innerText = fData.status;
 
                 card.classList.remove('active-step', 'year-complete');
@@ -953,8 +1170,12 @@
             }
         }
 
-        // キーボード操作対応（左右矢印キーでステップ移動）
+        // キーボード操作対応（左右矢印キーでステップ移動・Escでモーダルを閉じる）
         window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closePersonModal();
+                return;
+            }
             if (e.key === 'ArrowRight') nextStep();
             if (e.key === 'ArrowLeft') prevStep();
         });
