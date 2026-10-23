@@ -497,6 +497,20 @@
             line-height: 1.5;
         }
 
+        /* 画像1枚だけの表示モード（ええじゃないか等の出来事の絵） */
+        .person-modal-compare.single {
+            grid-template-columns: 1fr;
+        }
+
+        .person-modal-compare.single .person-modal-img-wrap {
+            height: auto;
+            max-height: 460px;
+        }
+
+        .person-modal-compare.single .person-modal-img-wrap img {
+            max-height: 436px;
+        }
+
         @media (max-width: 640px) {
             .person-modal-compare {
                 grid-template-columns: 1fr;
@@ -722,14 +736,14 @@
             <button class="person-modal-close" onclick="closePersonModal()" aria-label="閉じる">×</button>
             <div class="person-modal-faction" id="personModalFaction"></div>
             <div class="person-modal-name" id="personModalName"></div>
-            <div class="person-modal-compare">
+            <div class="person-modal-compare" id="personModalCompare">
                 <div class="person-modal-card">
                     <div class="person-modal-card-label" id="personModalLabelLeft">🎨 イラスト</div>
                     <div class="person-modal-img-wrap">
                         <img id="personModalImgLeft" src="" alt="">
                     </div>
                 </div>
-                <div class="person-modal-card">
+                <div class="person-modal-card" id="personModalCardRight">
                     <div class="person-modal-card-label" id="personModalLabelRight">📸 実物写真（教科書掲載）</div>
                     <div class="person-modal-img-wrap">
                         <img id="personModalImgRight" src="" alt="">
@@ -1072,6 +1086,14 @@
                 rightLabel: "📸 実物写真（1873年・洋装の軍服姿）",
                 rightImg: "photo_meiji_tenno.jpg",
                 desc: "王政復古の大号令により樹立された新政府の中心。伝統的な装束姿（左・1872年）から、断髪して西洋式の軍服姿（右・1873年）へと変化した写真は、日本の近代化を象徴するものとして教科書でも有名です。"
+            },
+            // 出来事の絵（画像1枚だけ表示：rightImg なし）
+            eejanaika: {
+                name: "ええじゃないか（1867年）",
+                faction: "🎎 民衆の動き（世直しへの期待）",
+                leftLabel: "🖼️ 当時の絵（河鍋暁斎 画・1867年）",
+                leftImg: "photo_eejanaika.jpg",
+                desc: "1867年、空から伊勢神宮などのお札が降ったといううわさをきっかけに、民衆が「ええじゃないか」と唱えながら熱狂して踊る騒ぎが、東海・近畿地方を中心に各地へ広がりました。\n出典：河鍋暁斎「ええじゃないか」（国立国会図書館デジタルコレクション／Wikimedia Commons、パブリックドメイン）"
             }
         };
 
@@ -1085,15 +1107,16 @@
             "慶喜": "yoshinobu",
             "岩倉具視": "iwakura",
             "明治天皇": "tenno",
-            "天皇": "tenno"
+            "天皇": "tenno",
+            "ええじゃないか": "eejanaika"
         };
 
         function linkifyNames(text) {
             if (!text) return "";
-            return text.replace(/高杉晋作|木戸孝允|西郷隆盛|西郷|大久保利通|徳川慶喜|慶喜|岩倉具視|明治天皇|天皇/g, (match) => {
+            return text.replace(/高杉晋作|木戸孝允|西郷隆盛|西郷|大久保利通|徳川慶喜|慶喜|岩倉具視|明治天皇|天皇|ええじゃないか/g, (match) => {
                 const key = nameToKey[match];
                 const p = persons[key];
-                return `<a href="${p.rightImg}" class="person-link" onclick="openPersonModal(event, '${key}')">${match}</a>`;
+                return `<a href="${p.rightImg || p.leftImg}" class="person-link" onclick="openPersonModal(event, '${key}')">${match}</a>`;
             });
         }
 
@@ -1110,10 +1133,21 @@
             imgLeft.src = p.leftImg;
             imgLeft.alt = `${p.name} (${p.leftLabel})`;
 
-            document.getElementById('personModalLabelRight').innerText = p.rightLabel;
+            // 右側の画像がない場合は1枚だけ大きく表示する
+            const compare = document.getElementById('personModalCompare');
+            const cardRight = document.getElementById('personModalCardRight');
             const imgRight = document.getElementById('personModalImgRight');
-            imgRight.src = p.rightImg;
-            imgRight.alt = `${p.name} (${p.rightLabel})`;
+            if (p.rightImg) {
+                compare.classList.remove('single');
+                cardRight.style.display = '';
+                document.getElementById('personModalLabelRight').innerText = p.rightLabel;
+                imgRight.src = p.rightImg;
+                imgRight.alt = `${p.name} (${p.rightLabel})`;
+            } else {
+                compare.classList.add('single');
+                cardRight.style.display = 'none';
+                imgRight.src = '';
+            }
 
             document.getElementById('personModalDesc').innerText = p.desc;
 
